@@ -5,7 +5,7 @@ import worker from './worker';
 const Queue = require('bee-queue');
 const queue = new Queue('webhooks', {
   redis: {
-    host: 'redis',
+    host: process.env.REDIS_URL || 'services.fetch.altavian.local',
     port: 6379,
     db: 2
   }

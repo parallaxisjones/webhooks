@@ -49,7 +49,7 @@ const config = {
   },
   development: {
     mongo: {
-      uri: 'mongodb://mongo/hooks',
+      uri: process.env.MONGODB_URI || 'mongodb://services.fetch.altavian.local:27017/hooks',
       options: {
         debug: true
       }
