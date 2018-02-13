@@ -4,6 +4,8 @@ import Promise from 'bluebird';
 
 import logger from '../winston';
 
+//TODO: investigate
+
 /* Kafka connection parameters */
 const partition = 0;
 const attributes = 0;

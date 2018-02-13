@@ -3,6 +3,9 @@ import { router as hookApi } from './hook'
 
 const router = new Router()
 
+
+// TODO: investigate duplicate health check, the one in the express config is enough, this is probs need delet
+// BUG duplicate health check ENDPOINT
 router.get('/healthz', function (request, response, err) {
   return response.status(200).send()
 })

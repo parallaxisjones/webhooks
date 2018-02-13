@@ -2,6 +2,9 @@ const unirest = require('unirest');
 import Promise from 'bluebird';
 import logger from '../winston';
 import config from '../../config'
+
+// TODO: investigate
+
 const TOPIC_SERVICE_URL = config.services.subscription + "/subscriptions"
 
 const DEFAULT_HEADERS = {

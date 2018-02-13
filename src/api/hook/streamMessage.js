@@ -4,6 +4,9 @@ import {publisher} from '../../services/redis'
 const producer = require('../../services/kafka/producer');
 import TopicService from '../../services/kafka/topics';
 
+// TODO: remove redis service, not using redis publisher
+// TODO: remove esClient, no clients, only kafka
+// TODO: remote the leading underscores from method names
 const redisService = require('../../services/redis');
 
 const uuidV1 = require('uuid/v1');
@@ -17,7 +20,7 @@ const getTopicName = t => t && t.id,
 
 
  /**
-  *  @class StreamMessage
+  *  @class StreamMessage this is the container that knows about kafka.  it takes
   *  @method {promise} publish
   */
 export default class StreamMessage{
@@ -26,8 +29,7 @@ export default class StreamMessage{
    * constructor - description
    *
    * @param  {Model} doc = null description
-   * @param  {type} message = null   description
-   * @return {type}                  description
+   * @param  {Object} message = null   message payload, has a type and properties
    */
   constructor(doc, topics = []){
     this.__doc = doc;
@@ -37,36 +39,44 @@ export default class StreamMessage{
     this.__topic_name__ = topics;
   }
   /**
-   * @static convertToBuffer - description
+   * @static convertToBuffer - helper function for turning a string into a buffer
    *
-   * @param  {type} string = '' description
-   * @return {type}             description
+   * @param  {String} string = '' string target
+   * @return {Buffer}             output buffer
    */
   static convertToBuffer(string = ''){
     return new Buffer(string, this.__STRING_ENCODING__)
   }
 
   /**
-   * @static serialize - description
+   * @static serialize - helper function
    *
-   * @param  {type} object = {} description
-   * @return {type}             description
+   * @param  {Object} object = {} JSON object
+   * @return {String}             string representation of JSON
    */
   static serialize(object = {}){
     return JSON.stringify(object)
   }
+
+  /**
+   * getProducer - return the kafka event producer
+   *
+   * @return {Producer}  kafka producer for stream message
+   */
   getProducer(){
     return producer.getProducerForTopic(this.__topic_name__);
   }
   /**
    * getTopic - description
    *
-   * @param  {type} topicName = null description
-   * @return {type}                  description
+   * @param  {String} topicName = null name of the kafka topic to get if not our own, nullable
+   * @return {Promise}                 promise of the ting
    */
   getTopic(topicName = null){
     const message = this;
     const t = topicName || this.__topic_name__ || '';
+
+    //TODO: check to see if this is working
     return TopicService.get({
       name: topicName
     }).then(topic => {
@@ -80,18 +90,18 @@ export default class StreamMessage{
   }
 
   /**
-   * isReady - description
+   * isReady - bool, are we ready?
    *
-   * @return {type}  description
+   * @return {Boolean}  is ready to use or not
    */
   isReady(){
     return (this.__message__);
   }
 
   /**
-   * __parseObjectMessage - description
+   * __parseObjectMessage - helper
    *
-   * @return {type}  description
+   * @return {type}  wrapper for private util
    */
   __parseObjectMessage(){
     const message = this.__message__;
@@ -101,7 +111,8 @@ export default class StreamMessage{
   }
 
   /**
-   * __packageMessages - description
+   * __packageMessages - helper, packaged the message the right way for kafka.
+   * TODO: make topic attributes able to be passed in or gotten async here for custom configuration
    *
    * @return {type}  description
    */
@@ -117,9 +128,9 @@ export default class StreamMessage{
   }
 
   /**
-   * getMessage - description
+   * getMessage - get the message form of our PAYLOAD
    *
-   * @return {type}  description
+   * @return {Object}  js object of deserialie message
    */
   getMessage(){
     return (typeof this.__message__ === 'string') ?
@@ -128,7 +139,7 @@ export default class StreamMessage{
   }
 
   /**
-   * publish - description
+   * publish - public method. This should be the only method that is needed 99% of the time, unless for analytics or something
    *
    * @return {type}  description
    */
