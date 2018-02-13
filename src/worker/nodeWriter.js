@@ -6,7 +6,8 @@ import logger from '../services/winston';
 const   GRAPH_EVENTS          = ['NODE_COMMIT', 'EDGE_COMMIT']
       , NODE_COMMIT_STREAM    = 'NODE_COMMIT_STREAM'
       , HOOK_CREATE           = 'HOOK_CREATE'
-      , HOOK_NOTIFY           = 'HOOK_NOTIFY';
+      , HOOK_NOTIFY           = 'HOOK_NOTIFY'
+      , HOOK_DELETE           = 'HOOK_DELETE';
 
 // TODO: clean up node/graph events, not needed
 // IDEA: check out atom's console log tool.  there's a function to remove all the console logs
@@ -27,12 +28,12 @@ function ProcessJob(job, done) {
   console.log(`Processing job ${job.id}`, job.data);
   //NOTE: this works the exact same as a redux message, except they are called jobs and come out
   //      of a maejic job pipe, when one comes through, we do one of three things
-  // 
+  //
   const {type, properties} = job.data;
 
   switch(type){
     // TODO: implement HOOK_DELETE
-    case HOOK_DELETE: {
+    case HOOK_DELETE:
       return Promise.reject(new Exception("not implemented"))
     }
     case HOOK_CREATE: {
