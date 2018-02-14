@@ -69,7 +69,7 @@ HookSchema.post('save', doc => {
   // NOTE: producer logic lives in stream message, to produce a new one do this:
   const hook = doc.view(true)
   const topic = hook.properties && hook.properties.type ? hook.properties.type : HOOK_NOTIFY
-  const message = new StreamMessage(hook, [topic])
+  const message = new StreamMessage(hook, topic)
   // TODO: this should be implemented as doc.fire()
   message.publish((err, results) =>{
     console.log(results);

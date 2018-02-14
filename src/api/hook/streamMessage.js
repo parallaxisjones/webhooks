@@ -55,7 +55,8 @@ export default class StreamMessage{
    * @return {String}             string representation of JSON
    */
   static serialize(object = {}){
-    return JSON.stringify(object)
+    console.log("Hey i'm serialize and i serialize", object)
+    return  JSON.stringify(object)
   }
 
   /**

@@ -1,6 +1,6 @@
-const Kafka = require("kafka-node");
-const KeyedMessage = Kafka.KeyedMessage;
+import KafkaRest from 'k'
 import Promise from 'bluebird';
+import {KAFKA_ADDRESS} from '../../constants';
 
 import logger from '../winston';
 
@@ -11,10 +11,7 @@ const partition = 0;
 const attributes = 0;
 const requireAcks = 1;
 import redisService from '../redis';
-const kafkaAddress = process.env.NODE_ENV === 'production' ?
-	"kafka:2181" :
-	"kafka:2181";
-const kafkaClient = new Kafka.Client(kafkaAddress);
+const kafkaClient = new Kafka.Client(KAFKA_ADDRESS);
 
 function createTopicProducer(topics = [], callback = null){
 	const CREATE_TOPICS_ASYNC = true;

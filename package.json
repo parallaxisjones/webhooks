@@ -62,6 +62,7 @@
     "express": "^4.13.4",
     "jsonwebtoken": "^8.0.1",
     "kafka-node": "^2.2.3",
+    "kafka-rest": "0.0.5",
     "kafka-streams": "^3.0.0",
     "lodash": "^4.13.1",
     "mongoosastic": "^4.3.0",
