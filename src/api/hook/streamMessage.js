@@ -31,11 +31,11 @@ export default class StreamMessage{
    * @param  {Model} doc = null description
    * @param  {Object} message = null   message payload, has a type and properties
    */
-  constructor(doc, topics = []){
+  constructor(doc = {}, topics = []){
     this.__doc = doc;
     this.__id = uuidV1();
     this.__STRING_ENCODING__ = 'utf-8';
-    this.__message__ = doc.view(true) || {};
+    this.__message__ = doc && doc.view ? doc.view(true) : doc;
     this.__topic_name__ = topics;
   }
   /**
