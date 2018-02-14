@@ -14,7 +14,10 @@ router.post('/',
       type: String
     },
     properties: {
-      type: Object
+      type: Object,
+    },
+    repository: {
+      type: Object,
     }
   }),
   trigger)

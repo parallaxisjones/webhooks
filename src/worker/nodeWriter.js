@@ -1,15 +1,12 @@
 import { env, mongo, port, ip } from '../config'
 import mongoose from '../services/mongoose'
-import esClient from '../services/elasticsearch'
 import Hook from '../api/hook/models';
 import logger from '../services/winston';
-const   GRAPH_EVENTS          = ['NODE_COMMIT', 'EDGE_COMMIT']
-      , NODE_COMMIT_STREAM    = 'NODE_COMMIT_STREAM'
-      , HOOK_CREATE           = 'HOOK_CREATE'
+const   HOOK_CREATE           = 'HOOK_CREATE'
       , HOOK_NOTIFY           = 'HOOK_NOTIFY'
       , HOOK_DELETE           = 'HOOK_DELETE';
 
-// TODO: clean up node/graph events, not needed
+// REVIEW: clean up node/graph events, not needed
 // IDEA: check out atom's console log tool.  there's a function to remove all the console logs
 mongoose.connect(mongo.uri)
 
@@ -33,9 +30,6 @@ function ProcessJob(job, done) {
 
   switch(type){
     // TODO: implement HOOK_DELETE
-    case HOOK_DELETE:
-      return Promise.reject(new Exception("not implemented"))
-    }
     case HOOK_CREATE: {
       // NOTE: create a new hook, this happens when a new hook is registered some how.
       //       we don't need to care how or why we got called, only know what to do when we are.
@@ -57,15 +51,15 @@ function ProcessJob(job, done) {
       // TODO: make a new mongoose model for a call log, a hook gets registered in Hooks, and when it fires,
       //       we add a record to the call log.
       // NOTE: there may also be special instructions on the record in the mongo db such as permissions
-      const params = type ? {
-        type
+      const params = properties.type ? {
+        type: properties.type
       } : {};
 
       return properties && Hook
       .find(params)
       .then(hooks => hooks.length > 0 ?
-        hooks.map(hook => hook.fire(properties))
-        : Hook.create(properties).then(hook => hook.fire(properties))
+        hooks.map(hook => hook.updateCounter())
+        : Hook.create(properties).then(hook => hook.updateCounter())
         .then(
           hook => done(null, hook)
         ))

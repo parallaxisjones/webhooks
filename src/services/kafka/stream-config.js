@@ -2,7 +2,7 @@
 
 export const nativeConfig = {
     noptions: {
-        "metadata.broker.list": "services.fetch.altavian.local:9092", //native client requires broker hosts to connect to
+        "metadata.broker.list": "services.fetch.altavian.local:2181", //native client requires broker hosts to connect to
         "group.id": "kafka-streams-test-native",
         "client.id": "kafka-streams-test-name-native",
         "event_cb": true,
@@ -39,7 +39,7 @@ export const nativeConfig = {
 
 export const config = {
     // zkConStr: "services.fetch.altavian.local:2181",
-    kafkaHost: "services.fetch.altavian.local:9092", //either kafkaHost or zkConStr
+    kafkaHost: "services.fetch.altavian.local:2181", //either kafkaHost or zkConStr
     logger: {
       debug: msg => console.log(msg),
       info: msg => console.log(msg),

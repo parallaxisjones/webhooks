@@ -2,8 +2,8 @@ import _ from 'lodash'
 // import { Types } from 'mongoose'
 import { success, notFound } from '../../services/response/'
 import Hook  from './models'
-
-const HOOK_NOTIFY = 'HOOK_NOTIFY'; //TODO: make a constants dir in the src folder and export this from there in all places.
+import HOOK_NOTIFY from '../../constants';
+//REVIEW: make a constants dir in the src folder and export this from there in all places.
 
 /**
 * endpoint handler, this gets passed the queue from the request, and the post request body
@@ -13,7 +13,7 @@ const HOOK_NOTIFY = 'HOOK_NOTIFY'; //TODO: make a constants dir in the src folde
 export const trigger = ({ queue, bodymen: { body }, user }, res, next) => {
 
   //TODO: remove console log
-  console.log('trigger', body);
+  console.log('trigger', body, queue, user);
 
   //NOTE: create a job on the queue and pass in the user info as well as the body of the post request
   //      this should take place after jwt authorization and exchange for user infos.
@@ -35,7 +35,9 @@ export const trigger = ({ queue, bodymen: { body }, user }, res, next) => {
 
     const jobId = job.id;
     // register queue events
+
     queue.on('job succeeded', (jobId, result) => {
+      console.log(result)
       console.log(`Job ${jobId} succeeded with result: ${result}`);
     });
     queue.on('job retrying', (jobId, err) => {
