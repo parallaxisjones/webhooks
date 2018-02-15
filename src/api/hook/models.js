@@ -1,6 +1,3 @@
-//TODO: Make a script header
-//TODO: clean up console logs
-// IDEA: build a directory watcher service that creates todos and such
 import mongoose, { Schema } from 'mongoose'
 import mongoosastic from 'mongoosastic'
 import logger from '../../services/winston'
@@ -8,19 +5,30 @@ const producer = require('../../services/kafka/producer');
 let seeder = require('../../services/seeder')
 const uuidV1 = require('uuid/v1');
 import StreamMessage from './streamMessage';
-import esClient from '../../services/elasticsearch'
+
+//TODO: Make a script header
+//
+//TODO: clean up console logs when finished
+// TODO: ESLint setup
+//
+// IDEA: build a directory watcher service that creates todos and such
+
+const HOOK_NOTIFY  = 'HOOK_NOTIFY';
 
 const HOOK_SCHEMA = {
-  esindex: {
-    type: String,
-    defaultValue: 'webhooks'
-  },
   type: {
     type: String,
     defaultValue: 'action'
   },
   properties: {
     type: Object
+  },
+  fireCounter: {
+    type: Number,
+    defaultValue: 0
+  },
+  lastFired: {
+    type: Date
   }
 }
 const HOOK_SCHEMA_OPTIONS = {
@@ -28,20 +36,28 @@ const HOOK_SCHEMA_OPTIONS = {
 }
 
 const HOOK_METHODS = {
-  Indexer: function(opts = {}, callback = function(){}) {
-    this.index(opts, callback)
+  updateCounter(){
+    this.fireCounter = this.fireCounter ? this.fireCounter + 1 : 1;
+    this.lastFired = Date.now();
+    return this.save().then(doc => {
+      return doc
+    });
   },
-  fire({ type, properties }){
-    // console.log('fired data', type, properties);
-    // const message = new StreamMessage(properties, type)
-    // message.publish()
-    return this.view(true)
+  report(err = null, results){
+    return new StreamMessage(err ? err : results || 'empty results', 'webhooks-report').publish();
+  },
+  fire(){
+    // NOTE: producer logic lives in stream message, to produce a new one do this:
+    const hook = this.toJSON()
+    const topic = hook.type && hook.type ? hook.type : HOOK_NOTIFY
+    const message = new StreamMessage(hook, topic)
+
+    message.publish(this.report);
   },
   view (full) {
     const view = {
-      index: this.esindex,
       type: this.type,
-      properties: this.properties
+      ...this.properties
     }
     return full ? {
       ...view,
@@ -53,46 +69,9 @@ const HOOK_METHODS = {
 // register schema
 const HookSchema = new Schema(HOOK_SCHEMA, HOOK_SCHEMA_OPTIONS)
 HookSchema.methods = HOOK_METHODS
-const registerElasticPlugin = () => {
-  HookSchema.plugin(mongoosastic, {
-    esClient,
-    indexAutomatically: false,
-    customSerialize: (model, mapping) => {
-      if(model.mapping){
-        console.log('document mapping', model.mapping);
-      }
-      hook = model.view(true);
-      return hook.properties;
-    }
 
-  })
+HookSchema.post('save', doc => doc.fire())
 
-  HookSchema.post('save', doc => {
-    console.log('post save', doc);
-    doc.Indexer({
-      type: doc.type || 'hook'
-    }, function(err, hook){
-      const message = new StreamMessage(hook, 'HOOK_NOTIFY')
-      message.publish();
-    })
-
-    return model;
-  })
-}
-const tryRegister = (callback) => {
-  esClient.ping({
-    // ping usually has a 3000ms timeout
-    requestTimeout: 1000
-  }, function (error) {
-    if (error) {
-      //TODO: google how to set this to execute immediately
-      setTimeout(callback, 1000)
-    } else {
-      callback()
-    }
-  });
-}
-tryRegister(registerElasticPlugin)
 const Hook = mongoose.model('Hook', HookSchema)
 
 export default Hook;

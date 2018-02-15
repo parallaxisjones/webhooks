@@ -4,9 +4,28 @@ import { env, mongo, port, ip } from '../config'
 import mongoose from '../services/mongoose'
 import express from '../services/express'
 import api from '../api'
+
+
+/**
+ * export default - master listner.
+ * this is mad easy, all it does is start the express server configured in '../services/express'
+ *
+ * @param  {Queue} queue this is the job queue that get's made in the init process,
+ *                       we need to give it to the express server scope
+ */
 export default function(queue){
   const app = express(api, queue)
+  queue.on('job succeeded', (jobId, result) => {
+    console.log(`Job ${jobId} succeeded`);
+  });
+  queue.on('job retrying', (jobId, err) => {
+    console.log(`Job ${jobId} failed with error ${err.message} but is being retried!`);
+  });
+  queue.on('job failed', (jobId, err) => {
+    console.log(`Job ${jobId} failed with error ${err.message}`);
+  });  
   const server = http.createServer(app)
+  // TODO: find out why this is happening, why do we need setImmediate? do we need it?
   setImmediate(() => {
     server.listen(port, ip, () => {
 

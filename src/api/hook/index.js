@@ -8,13 +8,16 @@ import { token } from '../../services/passport'
 const router = new Router()
 
 router.post('/',
-  token({required: false}),
+  // token({required: false}),
   body({
     type: {
       type: String
     },
     properties: {
-      type: Object
+      type: Object,
+    },
+    repository: {
+      type: Object,
     }
   }),
   trigger)

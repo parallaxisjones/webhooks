@@ -8,11 +8,15 @@ import { errorHandler as bodyErrorHandler } from 'bodymen'
 import { env } from '../../config'
 
 export default (routes, queue) => {
-  const app = express()
+  // NOTE: init express app
+  const app = express();
+
   app.use((req, res, next) => {
-    console.log('got the thing');
+    // NOTE: attach the work queue to the request so that we can haz jobs.
     return (req.queue = queue) && next(null)
   })
+
+  // NOTE: configure webserver
   /* istanbul ignore next */
   if (env === 'production' || env === 'development') {
     app.use(cors())
@@ -29,6 +33,7 @@ export default (routes, queue) => {
   app.use(function (err, req, res, next) {
 
     if (err) {
+      // TODO: implement more robust error handling and reporting.  we have the metrics server
       res.status(err.status || 500)
       switch (env) {
         case 'production':
@@ -44,6 +49,17 @@ export default (routes, queue) => {
       }
     }
   })
+
+
+  /**
+   * register Health Check
+   *
+   * @param  {String} '/healthz'   endpoint path
+   * @param  {Function} anonymous event handler, this only needs to return success
+   * @param  {Request} req          the incoming request
+   * @param  {Response} res          the outgoing response
+   * @param  {Function} next         callback to call if this isn't the end of the line, if we're a middleware
+   */
   app.get('/healthz', function(req, res, next){
     return res.status(200).send()
   })

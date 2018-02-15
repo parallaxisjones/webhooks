@@ -5,6 +5,8 @@ import redisService from '../redis';
 import producer from './producer';
 import config  from '../../config';
 
+// TODO: investigate;
+
 const TOPIC_SERVICE_URL = config.services.subscription + "/topics";
 const DEFAULT_HEADERS = {
   'Accept': 'application/json',

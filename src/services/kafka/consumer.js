@@ -1,6 +1,8 @@
 const Kafka = require("kafka-node");
 const winston = require('../winston');
 
+// TODO: investigate
+
 const kafkaAddress = process.env.NODE_ENV === 'production' ?
     "kafka:2181" :
     "kafka:2181";
