@@ -1,4 +1,4 @@
-import KafkaRest from 'k'
+import Kafka from 'kafka-node';
 import Promise from 'bluebird';
 import {KAFKA_ADDRESS} from '../../constants';
 

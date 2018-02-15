@@ -7,8 +7,10 @@ const uuidV1 = require('uuid/v1');
 import StreamMessage from './streamMessage';
 
 //TODO: Make a script header
+//
 //TODO: clean up console logs when finished
 // TODO: ESLint setup
+//
 // IDEA: build a directory watcher service that creates todos and such
 
 const HOOK_NOTIFY  = 'HOOK_NOTIFY';
@@ -41,16 +43,21 @@ const HOOK_METHODS = {
       return doc
     });
   },
-  fire({ type, properties }){
-    // console.log('fired data', type, properties);
-    // const message = new StreamMessage(properties, type)
-    // message.publish()
-    return this.view(true)
+  report(err = null, results){
+    return new StreamMessage(err ? err : results || 'empty results', 'webhooks-report').publish();
+  },
+  fire(){
+    // NOTE: producer logic lives in stream message, to produce a new one do this:
+    const hook = this.toJSON()
+    const topic = hook.type && hook.type ? hook.type : HOOK_NOTIFY
+    const message = new StreamMessage(hook, topic)
+
+    message.publish(this.report);
   },
   view (full) {
     const view = {
       type: this.type,
-      properties: this.properties
+      ...this.properties
     }
     return full ? {
       ...view,
@@ -63,19 +70,7 @@ const HOOK_METHODS = {
 const HookSchema = new Schema(HOOK_SCHEMA, HOOK_SCHEMA_OPTIONS)
 HookSchema.methods = HOOK_METHODS
 
-HookSchema.post('save', doc => {
-  console.log('post save', doc);
-
-  // NOTE: producer logic lives in stream message, to produce a new one do this:
-  const hook = doc.view(true)
-  const topic = hook.properties && hook.properties.type ? hook.properties.type : HOOK_NOTIFY
-  const message = new StreamMessage(hook, topic)
-  // TODO: this should be implemented as doc.fire()
-  message.publish((err, results) =>{
-    console.log(results);
-  });
-  return doc
-})
+HookSchema.post('save', doc => doc.fire())
 
 const Hook = mongoose.model('Hook', HookSchema)
 

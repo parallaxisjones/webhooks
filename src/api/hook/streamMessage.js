@@ -1,8 +1,11 @@
 import esClient from '../../services/elasticsearch'
 import logger from '../../services/winston'
 import {publisher} from '../../services/redis'
-const producer = require('../../services/kafka/producer');
 import TopicService from '../../services/kafka/topics';
+import {KAFKA_ADDRESS} from '../../constants';
+
+import KafkaRest from 'kafka-rest'
+var kafka = new KafkaRest({ 'url': 'http://services.fetch.altavian.local:8082' });
 
 // TODO: remove redis service, not using redis publisher
 // TODO: remove esClient, no clients, only kafka
@@ -47,7 +50,9 @@ export default class StreamMessage{
   static convertToBuffer(string = ''){
     return new Buffer(string, this.__STRING_ENCODING__)
   }
-
+  toString(){
+    return StreamMessage.serialize(this.__message__);
+  }
   /**
    * @static serialize - helper function
    *
@@ -55,7 +60,6 @@ export default class StreamMessage{
    * @return {String}             string representation of JSON
    */
   static serialize(object = {}){
-    console.log("Hey i'm serialize and i serialize", object)
     return  JSON.stringify(object)
   }
 
@@ -73,6 +77,9 @@ export default class StreamMessage{
    * @param  {String} topicName = null name of the kafka topic to get if not our own, nullable
    * @return {Promise}                 promise of the ting
    */
+  getTopicName(){
+    return this.__topic_name__;
+  }
   getTopic(topicName = null){
     const message = this;
     const t = topicName || this.__topic_name__ || '';
@@ -146,15 +153,6 @@ export default class StreamMessage{
    */
   publish(callback = function(){}){
     const message = this;
-    const onStreamSuccess = (err, res) => {
-      if(err){
-        return console.log(err)
-      }
-      console.log(res)
-    };
-
-    return message
-    .getProducer()
-    .then(producer => producer.send(message.__packageMessages(), onStreamSuccess))
+    return kafka.topic(message.getTopicName()).produce(message.toString())
   }
 }

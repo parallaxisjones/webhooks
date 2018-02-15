@@ -22,7 +22,6 @@ mongoose.connect(mongo.uri)
  * @return {Promise}  returns false if something went wrong.  for chaining purposes, this Job may have a future.......
  */
 function ProcessJob(job, done) {
-  console.log(`Processing job ${job.id}`, job.data);
   //NOTE: this works the exact same as a redux message, except they are called jobs and come out
   //      of a maejic job pipe, when one comes through, we do one of three things
   //
@@ -39,7 +38,6 @@ function ProcessJob(job, done) {
       //       that will be called automatically by the post save hook we have on the model in $BASE_PATH/api/hook/models.js
       return properties && Hook
       .create(properties)
-      .then(hooks.map(hook => hook.fire(properties)))
       .catch(done)
     }
     case HOOK_NOTIFY:
@@ -56,13 +54,17 @@ function ProcessJob(job, done) {
       } : {};
 
       return properties && Hook
-      .find(params)
-      .then(hooks => hooks.length > 0 ?
-        hooks.map(hook => hook.updateCounter())
-        : Hook.create(properties).then(hook => hook.updateCounter())
-        .then(
-          hook => done(null, hook)
-        ))
+      .findOne(params)
+      .then(hook => {
+        if(hook){
+          hook.updateCounter()
+        }else{
+          Hook.create(properties).then(hook => hook.updateCounter())
+        }
+        done(null, hook);
+
+        return false;
+      })
       .catch(done)
     }
   }

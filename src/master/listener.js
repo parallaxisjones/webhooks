@@ -15,6 +15,15 @@ import api from '../api'
  */
 export default function(queue){
   const app = express(api, queue)
+  queue.on('job succeeded', (jobId, result) => {
+    console.log(`Job ${jobId} succeeded`);
+  });
+  queue.on('job retrying', (jobId, err) => {
+    console.log(`Job ${jobId} failed with error ${err.message} but is being retried!`);
+  });
+  queue.on('job failed', (jobId, err) => {
+    console.log(`Job ${jobId} failed with error ${err.message}`);
+  });  
   const server = http.createServer(app)
   // TODO: find out why this is happening, why do we need setImmediate? do we need it?
   setImmediate(() => {
