@@ -26,6 +26,7 @@ export const trigger = ({ queue, bodymen: { body }, user }, res, next) => {
       ...user
     }
   }
+  console.log('HIT WEBHOOK!!', body);
   const job = queue
   .createJob({
     type: 'HOOK_NOTIFY',
@@ -43,8 +44,8 @@ export const trigger = ({ queue, bodymen: { body }, user }, res, next) => {
     // register queue events
 
     // register job events
-    job.on('succeeded', (result) => {
-      console.log(`Received result for job ${job.id}: result`);
+    job.on('succeeded', (err, result) => {
+      console.log(`Received result for job ${job.id}: `, result);
     });
     job.on('retrying', (err) => {
       console.log(`Job ${job.id} failed with error ${err.message} but is being retried!`);

@@ -5,7 +5,7 @@ import TopicService from '../../services/kafka/topics';
 import {KAFKA_ADDRESS} from '../../constants';
 
 import KafkaRest from 'kafka-rest'
-var kafka = new KafkaRest({ 'url': 'http://services.fetch.altavian.local:8082' });
+var kafka = new KafkaRest({ 'url': 'http://services.fetch.altavian.local:8082/' });
 
 // TODO: remove redis service, not using redis publisher
 // TODO: remove esClient, no clients, only kafka
@@ -13,13 +13,6 @@ var kafka = new KafkaRest({ 'url': 'http://services.fetch.altavian.local:8082' }
 const redisService = require('../../services/redis');
 
 const uuidV1 = require('uuid/v1');
-const getTopicName = t => t && t.id,
-      getTopicPartition = t => t && t.partition || 0,
-      getTopicAttributes = () => 1,
-      graphMessages = ['HOOK_ADDED', 'HOOK_UPDATE', 'EDGE_ADD', 'EDGE_REMOVE'],
-      HOOK_UPDATE = graphMessages[1],
-      topicIndex = topic => topic.name === HOOK_UPDATE;
-
 
 
  /**
@@ -34,12 +27,11 @@ export default class StreamMessage{
    * @param  {Model} doc = null description
    * @param  {Object} message = null   message payload, has a type and properties
    */
-  constructor(doc = {}, topics = []){
-    this.__doc = doc;
+  constructor({schema, topic}){
     this.__id = uuidV1();
     this.__STRING_ENCODING__ = 'utf-8';
-    this.__message__ = doc && doc.view ? doc.view(true) : doc;
-    this.__topic_name__ = topics;
+    this.schema = schema;
+    this.__topic_name__ = topic;
   }
   /**
    * @static convertToBuffer - helper function for turning a string into a buffer
@@ -143,16 +135,23 @@ export default class StreamMessage{
   getMessage(){
     return (typeof this.__message__ === 'string') ?
     StreamMessage.convertToBuffer(this.__message__) :
-    this.__parseObjectMessage()
+    this.__parseObjectMessage();
   }
-
+  getSchema(){
+    const schema = this.schema;
+    return schema instanceof KafkaRest.AvroSchema && schema;
+  }
   /**
    * publish - public method. This should be the only method that is needed 99% of the time, unless for analytics or something
    *
    * @return {type}  description
    */
-  publish(callback = function(){}){
+  publish(payload, callback = function(){}){
     const message = this;
-    return kafka.topic(message.getTopicName()).produce(message.toString())
+    // const schema = this.getSchema()
+    // if(schema){
+    //   return kafka.topic(message.getTopicName()).produce(message.schema, payload);
+    // }
+    return kafka.topic(message.getTopicName()).produce(typeof message === 'string' ? message : message.toString());
   }
 }

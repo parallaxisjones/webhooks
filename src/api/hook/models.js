@@ -5,7 +5,7 @@ const producer = require('../../services/kafka/producer');
 let seeder = require('../../services/seeder')
 const uuidV1 = require('uuid/v1');
 import StreamMessage from './streamMessage';
-
+import KafkaRest from 'kafka-rest';
 //TODO: Make a script header
 //
 //TODO: clean up console logs when finished
@@ -14,7 +14,17 @@ import StreamMessage from './streamMessage';
 // IDEA: build a directory watcher service that creates todos and such
 
 const HOOK_NOTIFY  = 'HOOK_NOTIFY';
-
+let hookAvroSchema = new KafkaRest.AvroSchema({
+    name: "Webhook",
+    type: "record",
+    fields: [
+        { name: "id", "type": "string" },
+        { name: "type", "type": "string" },
+        { name: "properties", type: "map", values: "string" },
+        { name: "fireCounter", "type": "int" },
+        { name: "lastFired", "type": "string" },
+      ]
+});
 const HOOK_SCHEMA = {
   type: {
     type: String,
@@ -49,10 +59,14 @@ const HOOK_METHODS = {
   fire(){
     // NOTE: producer logic lives in stream message, to produce a new one do this:
     const hook = this.toJSON()
-    const topic = hook.type && hook.type ? hook.type : HOOK_NOTIFY
-    const message = new StreamMessage(hook, topic)
 
-    message.publish(this.report);
+    const topic = hook.type && hook.type ? hook.type : HOOK_NOTIFY
+    const message = new StreamMessage({
+      schema: hookAvroSchema,
+      topic
+    })
+
+    message.publish(hook);
   },
   view (full) {
     const view = {

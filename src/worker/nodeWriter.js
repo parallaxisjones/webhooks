@@ -38,10 +38,11 @@ function ProcessJob(job, done) {
       //       that will be called automatically by the post save hook we have on the model in $BASE_PATH/api/hook/models.js
       return properties && Hook
       .create(properties)
+      .then(response => done(null, response))
       .catch(done)
     }
-    case HOOK_NOTIFY:
-    default: {
+    case HOOK_NOTIFY: {
+      console.log('hook notify', type, properties);
       // NOTE: this is the main guy, hook notify will get called by all the tings, and put them into the pipe.
       //       any arbitrary consumer of HOOK_NOTIFY topic will be able to do something with this, it should know how.
       //       nothing more than finding matching hook and firing it
@@ -61,12 +62,13 @@ function ProcessJob(job, done) {
         }else{
           Hook.create(properties).then(hook => hook.updateCounter())
         }
-        done(null, hook);
-
-        return false;
+        return done(null, hook);
       })
       .catch(done)
     }
+    default:
+      done(null)
+      console.log('webhook should never be here');
   }
 }
 export default function(id, queue){
